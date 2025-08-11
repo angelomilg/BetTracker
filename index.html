@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetTracker - Gestión Profesional de Apuestas</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <!-- Pantalla de Login/Registro -->
+        <div id="auth-screen" class="auth-screen">
+            <div class="auth-container">
+                <h1>BetTracker</h1>
+                <p class="subtitle">Gestión profesional de apuestas deportivas</p>
+                
+                <div class="auth-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Contraseña</label>
+                        <input type="password" id="login-password" placeholder="••••••••">
+                    </div>
+                    <button id="login-btn" class="btn btn-primary">Iniciar sesión</button>
+                    <button id="register-btn" class="btn btn-secondary">Registrarse</button>
+                </div>
+                
+                <div class="firebase-config">
+                    <h3>Configuración Firebase</h3>
+                    <p>Si eres administrador, configura tus credenciales Firebase aquí:</p>
+                    <textarea id="firebase-config" placeholder='{
+  "apiKey": "AIzaSyAcVHefZmWRvlaGi0o98CiINW7ZKDm-lzM",
+  "authDomain": "omil-4fde2.firebaseapp.com",
+  "databaseURL": "https://omil-4fde2-default-rtdb.europe-west1.firebasedatabase.app",
+  "projectId": "omil-4fde2",
+  "storageBucket": "omil-4fde2.firebasestorage.app",
+  "messagingSenderId": "568300195857",
+  "appId": "1:568300195857:web:8dc37413e3703e686c61b0"
+}'></textarea>
+                    <button id="save-config-btn" class="btn btn-secondary">Guardar Configuración</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla principal de la aplicación -->
+        <div id="app-container" class="app-container hidden">
+            <!-- Barra de navegación -->
+            <header class="app-header">
+                <div class="header-left">
+                    <h1>BetTracker</h1>
+                    <div class="theme-toggle">
+                        <span class="theme-icon">🌙</span>
+                        <label class="switch">
+                            <input type="checkbox" id="theme-switch">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="theme-icon">☀️</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span id="user-email" class="user-email"></span>
+                    <button id="logout-btn" class="btn btn-logout">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <!-- Menú principal -->
+            <nav class="app-nav">
+                <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+                <button class="nav-btn" data-section="bets">Apuestas</button>
+                <button class="nav-btn" data-section="add-bet">Añadir Apuesta</button>
+                <button class="nav-btn" data-section="strategies">Estrategias</button>
+                <button class="nav-btn" data-section="settings">Configuración</button>
+            </nav>
+
+            <!-- Contenido principal -->
+            <main class="app-content">
+                <!-- Sección Dashboard -->
+                <section id="dashboard" class="content-section">
+                    <h2>Resumen Estadístico</h2>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Bank Actual</h3>
+                            <p id="current-bank" class="stat-value">0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Beneficio Neto</h3>
+                            <p id="net-profit" class="stat-value">0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>ROI</h3>
+                            <p id="roi" class="stat-value">0.00%</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Yield</h3>
+                            <p id="yield" class="stat-value">0.00%</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>% Acierto</h3>
+                            <p id="hit-rate" class="stat-value">0.00%</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Apuestas</h3>
+                            <p id="total-bets" class="stat-value">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="charts-container">
+                        <div class="chart-box">
+                            <h3>Evolución del Bank</h3>
+                            <canvas id="bank-chart"></canvas>
+                        </div>
+                        <div class="chart-box">
+                            <h3>Rendimiento por Estrategia</h3>
+                            <canvas id="strategy-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-bets">
+                        <h3>Últimas Apuestas</h3>
+                        <div class="table-container">
+                            <table id="recent-bets-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Evento</th>
+                                        <th>Tipo</th>
+                                        <th>Cuota</th>
+                                        <th>Stake</th>
+                                        <th>Resultado</th>
+                                        <th>Beneficio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Las apuestas recientes se cargarán aquí -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sección Lista de Apuestas -->
+                <section id="bets" class="content-section hidden">
+                    <div class="section-header">
+                        <h2>Historial de Apuestas</h2>
+                        <div class="filters">
+                            <select id="time-filter" class="filter-select">
+                                <option value="all">Todas las fechas</option>
+                                <option value="today">Hoy</option>
+                                <option value="week">Últimos 7 días</option>
+                                <option value="month">Mes actual</option>
+                                <option value="custom">Rango personalizado</option>
+                            </select>
+                            <div id="custom-date-range" class="custom-range hidden">
+                                <input type="date" id="start-date">
+                                <span>a</span>
+                                <input type="date" id="end-date">
+                                <button id="apply-range-btn" class="btn btn-small">Aplicar</button>
+                            </div>
+                            <select id="strategy-filter" class="filter-select">
+                                <option value="all">Todas las estrategias</option>
+                            </select>
+                            <select id="sport-filter" class="filter-select">
+                                <option value="all">Todos los deportes</option>
+                            </select>
+                            <select id="result-filter" class="filter-select">
+                                <option value="all">Todos los resultados</option>
+                                <option value="won">Ganadas</option>
+                                <option value="lost">Perdidas</option>
+                                <option value="void">Void</option>
+                            </select>
+                            <button id="reset-filters-btn" class="btn btn-small">Resetear Filtros</button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="bets-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Deporte</th>
+                                    <th>Evento</th>
+                                    <th>Tipo</th>
+                                    <th>Estrategia</th>
+                                    <th>Cuota</th>
+                                    <th>Stake</th>
+                                    <th>Resultado</th>
+                                    <th>Beneficio</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Las apuestas se cargarán aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="export-options">
+                        <button id="export-csv-btn" class="btn btn-secondary">Exportar a CSV</button>
+                        <button id="export-json-btn" class="btn btn-secondary">Exportar a JSON</button>
+                        <button id="import-json-btn" class="btn btn-secondary">Importar desde JSON</button>
+                        <input type="file" id="json-import-file" accept=".json" class="hidden">
+                    </div>
+                </section>
+
+                <!-- Sección Añadir Apuesta -->
+                <section id="add-bet" class="content-section hidden">
+                    <h2>Añadir Nueva Apuesta</h2>
+                    
+                    <form id="add-bet-form" class="bet-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bet-date">Fecha y Hora</label>
+                                <input type="datetime-local" id="bet-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bet-sport">Deporte / Competición</label>
+                                <input type="text" id="bet-sport" placeholder="Ej: Fútbol - La Liga" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bet-event">Evento</label>
+                                <input type="text" id="bet-event" placeholder="Ej: Barcelona vs Real Madrid" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bet-type">Tipo de Apuesta</label>
+                                <select id="bet-type" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="1X2">1X2</option>
+                                    <option value="Over/Under">Over/Under</option>
+                                    <option value="Hándicap">Hándicap</option>
+                                    <option value="Córners">Córners</option>
+                                    <option value="Tarjetas">Tarjetas</option>
+                                    <option value="Goles">Goles</option>
+                                    <option value="Resultado Final">Resultado Final</option>
+                                    <option value="Ambos marcan">Ambos marcan</option>
+                                    <option value="Marcador exacto">Marcador exacto</option>
+                                    <option value="Otras">Otras</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bet-odds">Cuota</label>
+                                <input type="number" id="bet-odds" min="1.00" step="0.01" placeholder="Ej: 1.85" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bet-stake">Stake (unidades)</label>
+                                <input type="number" id="bet-stake" min="0.5" step="0.5" placeholder="Ej: 1.0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bet-result">Resultado</label>
+                                <select id="bet-result" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="won">Ganada</option>
+                                    <option value="lost">Perdida</option>
+                                    <option value="void">Void</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bet-strategy">Estrategia</label>
+                                <div class="select-with-button">
+                                    <select id="bet-strategy" required>
+                                        <option value="">Seleccionar...</option>
+                                    </select>
+                                    <button type="button" id="add-strategy-btn" class="btn btn-small">+ Nueva</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="bet-bookmaker">Casa de Apuestas</label>
+                                <input type="text" id="bet-bookmaker" placeholder="Ej: Bet365">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="bet-comments">Comentarios</label>
+                            <textarea id="bet-comments" rows="3" placeholder="Notas sobre la apuesta..."></textarea>
+                        </div>
+                        
+                        <div class="form-buttons">
+                            <button type="submit" class="btn btn-primary">Guardar Apuesta</button>
+                            <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Sección Estrategias -->
+                <section id="strategies" class="content-section hidden">
+                    <div class="section-header">
+                        <h2>Gestión de Estrategias</h2>
+                        <div class="strategy-form">
+                            <input type="text" id="new-strategy-name" placeholder="Nombre de la estrategia">
+                            <button id="add-strategy-main-btn" class="btn btn-primary">Añadir Estrategia</button>
+                        </div>
+                    </div>
+                    
+                    <div class="strategies-list">
+                        <h3>Tus Estrategias</h3>
+                        <ul id="strategies-ul">
+                            <!-- Las estrategias se cargarán aquí -->
+                        </ul>
+                    </div>
+                    
+                    <div class="strategy-stats">
+                        <h3>Estadísticas por Estrategia</h3>
+                        <select id="strategy-stats-select">
+                            <option value="">Selecciona una estrategia</option>
+                        </select>
+                        
+                        <div id="strategy-stats-container" class="hidden">
+                            <div class="stats-grid small">
+                                <div class="stat-card">
+                                    <h3>Apuestas</h3>
+                                    <p id="strategy-total-bets" class="stat-value">0</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>Ganadas</h3>
+                                    <p id="strategy-won-bets" class="stat-value">0</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>Perdidas</h3>
+                                    <p id="strategy-lost-bets" class="stat-value">0</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>Void</h3>
+                                    <p id="strategy-void-bets" class="stat-value">0</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>% Acierto</h3>
+                                    <p id="strategy-hit-rate" class="stat-value">0%</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>Beneficio</h3>
+                                    <p id="strategy-profit" class="stat-value">0.00</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>ROI</h3>
+                                    <p id="strategy-roi" class="stat-value">0%</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3>Yield</h3>
+                                    <p id="strategy-yield" class="stat-value">0%</p>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-box">
+                                <canvas id="strategy-detail-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sección Configuración -->
+                <section id="settings" class="content-section hidden">
+                    <h2>Configuración</h2>
+                    
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label for="initial-bank">Bank Inicial</label>
+                            <input type="number" id="initial-bank" min="0" step="1" placeholder="Ej: 100">
+                            <p class="help-text">Define tu bank inicial para calcular correctamente las estadísticas.</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="stake-unit">Valor de la Unidad de Stake</label>
+                            <input type="number" id="stake-unit" min="0.1" step="0.1" placeholder="Ej: 10.0">
+                            <p class="help-text">Define cuánto dinero representa 1 unidad de stake.</p>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="default-stake">Stake Predeterminado</label>
+                            <input type="number" id="default-stake" min="0.5" step="0.5" placeholder="Ej: 1.0">
+                            <p class="help-text">Stake que se cargará por defecto al añadir una apuesta.</p>
+                        </div>
+                        
+                        <div class="form-buttons">
+                            <button id="save-settings-btn" class="btn btn-primary">Guardar Configuración</button>
+                        </div>
+                        
+                        <div class="danger-zone">
+                            <h3>Zona Peligrosa</h3>
+                            <button id="delete-all-bets-btn" class="btn btn-danger">Eliminar TODAS las apuestas</button>
+                            <button id="delete-account-btn" class="btn btn-danger">Eliminar cuenta y todos los datos</button>
+                            <p class="warning-text">¡Estas acciones no se pueden deshacer!</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal para editar apuesta -->
+    <div id="edit-bet-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Editar Apuesta</h2>
+            <form id="edit-bet-form" class="bet-form">
+                <input type="hidden" id="edit-bet-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-bet-date">Fecha y Hora</label>
+                        <input type="datetime-local" id="edit-bet-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bet-sport">Deporte / Competición</label>
+                        <input type="text" id="edit-bet-sport" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-bet-event">Evento</label>
+                        <input type="text" id="edit-bet-event" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bet-type">Tipo de Apuesta</label>
+                        <select id="edit-bet-type" required>
+                            <option value="1X2">1X2</option>
+                            <option value="Over/Under">Over/Under</option>
+                            <option value="Hándicap">Hándicap</option>
+                            <option value="Córners">Córners</option>
+                            <option value="Tarjetas">Tarjetas</option>
+                            <option value="Goles">Goles</option>
+                            <option value="Resultado Final">Resultado Final</option>
+                            <option value="Ambos marcan">Ambos marcan</option>
+                            <option value="Marcador exacto">Marcador exacto</option>
+                            <option value="Otras">Otras</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-bet-odds">Cuota</label>
+                        <input type="number" id="edit-bet-odds" min="1.00" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bet-stake">Stake (unidades)</label>
+                        <input type="number" id="edit-bet-stake" min="0.5" step="0.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bet-result">Resultado</label>
+                        <select id="edit-bet-result" required>
+                            <option value="won">Ganada</option>
+                            <option value="lost">Perdida</option>
+                            <option value="void">Void</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-bet-strategy">Estrategia</label>
+                        <select id="edit-bet-strategy" required>
+                            <!-- Las estrategias se cargarán aquí -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bet-bookmaker">Casa de Apuestas</label>
+                        <input type="text" id="edit-bet-bookmaker">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-bet-comments">Comentarios</label>
+                    <textarea id="edit-bet-comments" rows="3"></textarea>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary close-modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para confirmar acciones -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content small">
+            <h2 id="confirm-title">Confirmar acción</h2>
+            <p id="confirm-message">¿Estás seguro de que quieres realizar esta acción?</p>
+            <div class="modal-buttons">
+                <button id="confirm-cancel" class="btn btn-secondary">Cancelar</button>
+                <button id="confirm-ok" class="btn btn-danger">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para nueva estrategia -->
+    <div id="new-strategy-modal" class="modal hidden">
+        <div class="modal-content small">
+            <span class="close-modal">&times;</span>
+            <h2>Nueva Estrategia</h2>
+            <div class="form-group">
+                <label for="modal-strategy-name">Nombre de la estrategia</label>
+                <input type="text" id="modal-strategy-name" placeholder="Ej: Value en Over">
+            </div>
+            <div class="modal-buttons">
+                <button id="cancel-strategy-btn" class="btn btn-secondary">Cancelar</button>
+                <button id="save-strategy-btn" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
