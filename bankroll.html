@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Bankroll - BetMaster Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-dark: #5651d9;
+            --secondary: #4CC9F0;
+            --accent: #F72585;
+            --dark: #2B2D42;
+            --light: #F8F9FA;
+            --gray: #8D99AE;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --danger: #F44336;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background-color: white;
+            box-shadow: var(--box-shadow);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .logo i {
+            margin-right: 10px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 25px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+        }
+
+        nav ul li a i {
+            margin-right: 8px;
+        }
+
+        nav ul li a:hover, nav ul li a.active {
+            color: var(--primary);
+        }
+
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        /* Main Layout */
+        .app-container {
+            display: flex;
+            margin-top: 30px;
+            gap: 30px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            height: fit-content;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: var(--dark);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .sidebar-menu a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .stat-card {
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+        }
+
+        .icon-primary {
+            background-color: rgba(108, 99, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .icon-success {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success);
+        }
+
+        .icon-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: var(--warning);
+        }
+
+        .icon-danger {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            list-style: none;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .tab-item {
+            margin-right: 5px;
+        }
+
+        .tab-link {
+            display: block;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: var(--gray);
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .tab-link:hover, .tab-link.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 30px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            background-color: white;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+        }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--gray);
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Bankroll Strategies */
+        .strategy-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .strategy-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            border-left: 4px solid var(--primary);
+        }
+
+        .strategy-card h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .strategy-card h3 i {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+
+        .strategy-card p {
+            margin-bottom: 15px;
+            color: var(--gray);
+        }
+
+        .strategy-card ul {
+            list-style: none;
+            margin-bottom: 15px;
+        }
+
+        .strategy-card ul li {
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .strategy-card ul li i {
+            margin-right: 10px;
+            width: 16px;
+            color: var(--primary);
+        }
+
+        /* Progress bars */
+        .progress-bar {
+            height: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-danger {
+            background-color: var(--danger);
+        }
+
+        .progress-warning {
+            background-color: var(--warning);
+        }
+
+        .progress-success {
+            background-color: var(--success);
+        }
+
+        .progress-info {
+            background-color: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 60px 0 30px;
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul li a {
+            color: var(--light);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--secondary);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            color: white;
+            font-size: 20px;
+            transition: var(--transition);
+        }
+
+        .social-icons a:hover {
+            color: var(--secondary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin: 20px 0;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            nav ul li {
+                margin: 5px 10px;
+            }
+            
+            .auth-buttons {
+                margin-top: 15px;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab-item {
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <span>BetMaster Pro</span>
+            </div>
+            
+            <nav>
+                <ul>
+                    <li><a href="app.html"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="mis-pronosticos.html"><i class="fas fa-bullhorn"></i> Mis Pronósticos</a></li>
+                    <li><a href="analisis.html"><i class="fas fa-analytics"></i> Análisis</a></li>
+                    <li><a href="bankroll.html" class="active"><i class="fas fa-wallet"></i> Bankroll</a></li>
+                </ul>
+            </nav>
+            
+            <div class="auth-buttons">
+                <button class="btn btn-outline"><i class="fas fa-bell"></i> Notificaciones</button>
+                <button class="btn btn-primary"><i class="fas fa-user"></i> Mi Cuenta</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="app-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <ul class="sidebar-menu">
+                    <li><a href="app.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="nueva-apuesta.html"><i class="fas fa-plus-circle"></i> Nueva Apuesta</a></li>
+                    <li><a href="historial.html"><i class="fas fa-list"></i> Historial</a></li>
+                    <li><a href="analisis.html"><i class="fas fa-chart-pie"></i> Análisis</a></li>
+                    <li><a href="bankroll.html" class="active"><i class="fas fa-money-bill-wave"></i> Bankroll</a></li>
+                    <li><a href="objetivos.html"><i class="fas fa-target"></i> Objetivos</a></li>
+                    <li><a href="comparativas.html"><i class="fas fa-exchange-alt"></i> Comparativas</a></li>
+                    <li><a href="calculadoras.html"><i class="fas fa-calculator"></i> Calculadoras</a></li>
+                    <li><a href="configuracion.html"><i class="fas fa-cog"></i> Configuración</a></li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <h1 class="section-title"><i class="fas fa-wallet"></i> Gestión de Bankroll</h1>
+                
+                <!-- Estadísticas de Bankroll -->
+                <div class="dashboard-cards">
+                    <div class="card stat-card">
+                        <div class="stat-icon icon-primary">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-value">€4,582.50</div>
+                        <div class="stat-label">Bankroll Actual</div>
+                    </div>
+                    
+                    <div class="card stat-card">
+                        <div class="stat-icon icon-success">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-value">+€782.50</div>
+                        <div class="stat-label">Ganancias Totales</div>
+                    </div>
+                    
+                    <div class="card stat-card">
+                        <div class="stat-icon icon-warning">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-value">3.2%</div>
+                        <div class="stat-label">Stake Promedio</div>
+                    </div>
+                    
+                    <div class="card stat-card">
+                        <div class="stat-icon icon-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-value">42%</div>
+                        <div class="stat-label">Nivel de Riesgo</div>
+                    </div>
+                </div>
+
+                <!-- Tabs de Bankroll -->
+                <div class="card">
+                    <ul class="tabs">
+                        <li class="tab-item"><a href="#tab-overview" class="tab-link active">Resumen</a></li>
+                        <li class="tab-item"><a href="#tab-transactions" class="tab-link">Movimientos</a></li>
+                        <li class="tab-item"><a href="#tab-strategies" class="tab-link">Estrategias</a></li>
+                        <li class="tab-item"><a href="#tab-calculator" class="tab-link">Calculadora</a></li>
+                    </ul>
+                    
+                    <!-- Resumen -->
+                    <div class="tab-content active" id="tab-overview">
+                        <div class="chart-grid">
+                            <div class="chart-container">
+                                <canvas id="bankrollChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="stakeDistributionChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <h3>Distribución de Stake por Deporte</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Deporte</th>
+                                        <th>Stake Promedio</th>
+                                        <th>ROI</th>
+                                        <th>% del Bankroll</th>
+                                        <th>Rendimiento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Fútbol</td>
+                                        <td>3.5%</td>
+                                        <td class="positive">+16.3%</td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress progress-success" style="width: 65%"></div>
+                                            </div>
+                                            65%
+                                        </td>
+                                        <td><span class="positive">Excelente</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Baloncesto</td>
+                                        <td>2.8%</td>
+                                        <td class="positive">+8.7%</td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress progress-info" style="width: 20%"></div>
+                                            </div>
+                                            20%
+                                        </td>
+                                        <td><span class="positive">Bueno</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tenis</td>
+                                        <td>4.2%</td>
+                                        <td class="negative">-4.2%</td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress progress-danger" style="width: 10%"></div>
+                                            </div>
+                                            10%
+                                        </td>
+                                        <td><span class="negative">Deficiente</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Otros</td>
+                                        <td>2.5%</td>
+                                        <td class="positive">+5.3%</td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress progress-warning" style="width: 5%"></div>
+                                            </div>
+                                            5%
+                                        </td>
+                                        <td><span class="positive">Aceptable</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Movimientos -->
+                    <div class="tab-content" id="tab-transactions">
+                        <div class="filters">
+                            <select class="filter-select">
+                                <option>Todos los movimientos</option>
+                                <option>Depósitos</option>
+                                <option>Retiros</option>
+                                <option>Apuestas</option>
+                            </select>
+                            <select class="filter-select">
+                                <option>Últimos 30 días</option>
+                                <option>Últimos 7 días</option>
+                                <option>Últimos 3 meses</option>
+                                <option>Este año</option>
+                            </select>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Descripción</th>
+                                        <th>Tipo</th>
+                                        <th>Cantidad</th>
+                                        <th>Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>15/11/2023</td>
+                                        <td>Apuesta: Barcelona vs Real Madrid</td>
+                                        <td><span class="negative">Apuesta</span></td>
+                                        <td class="negative">-€50.00</td>
+                                        <td>€4,582.50</td>
+                                    </tr>
+                                    <tr>
+                                        <td>14/11/2023</td>
+                                        <td>Apuesta: Man City vs Liverpool</td>
+                                        <td><span class="negative">Apuesta</span></td>
+                                        <td class="negative">-€75.00</td>
+                                        <td>€4,632.50</td>
+                                    </tr>
+                                    <tr>
+                                        <td>13/11/2023</td>
+                                        <td>Ganancia: Juventus vs Inter</td>
+                                        <td><span class="positive">Ganancia</span></td>
+                                        <td class="positive">+€54.00</td>
+                                        <td>€4,707.50</td>
+                                    </tr>
+                                    <tr>
+                                        <td>12/11/2023</td>
+                                        <td>Apuesta: PSG vs Bayern</td>
+                                        <td><span class="negative">Apuesta</span></td>
+                                        <td class="negative">-€40.00</td>
+                                        <td>€4,653.50</td>
+                                    </tr>
+                                    <tr>
+                                        <td>10/11/2023</td>
+                                        <td>Depósito desde cuenta bancaria</td>
+                                        <td><span class="positive">Depósito</span></td>
+                                        <td class="positive">+€500.00</td>
+                                        <td>€4,693.50</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <button class="btn btn-outline">
+                            <i class="fas fa-download"></i> Exportar Movimientos
+                        </button>
+                        <button class="btn btn-primary" style="margin-left: 10px;">
+                            <i class="fas fa-plus"></i> Añadir Movimiento Manual
+                        </button>
+                    </div>
+                    
+                    <!-- Estrategias -->
+                    <div class="tab-content" id="tab-strategies">
+                        <h3>Estrategias de Gestión de Bankroll</h3>
+                        <p>Selecciona una estrategia para gestionar tu bankroll de manera óptima:</p>
+                        
+                        <div class="strategy-cards">
+                            <div class="strategy-card">
+                                <h3><i class="fas fa-chess"></i> Kelly Criterion</h3>
+                                <p>Calcula el stake óptimo basado en tu ventaja percibida sobre la casa de apuestas.</p>
+                                <ul>
+                                    <li><i class="fas fa-check"></i> Maximiza el crecimiento a largo plazo</li>
+                                    <li><i class="fas fa-check"></i> Requiere estimación precisa de probabilidades</li>
+                                    <li><i class="fas fa-check"></i> Mayor riesgo que otros métodos</li>
+                                </ul>
+                                <button class="btn btn-primary">Usar esta estrategia</button>
+                            </div>
+                            
+                            <div class="strategy-card">
+                                <h3><i class="fas fa-chart-line"></i> Percentage</h3>
+                                <p>Apuesta un porcentaje fijo de tu bankroll en cada apuesta.</p>
+                                <ul>
+                                    <li><i class="fas fa-check"></i> Simple y fácil de implementar</li>
+                                    <li><i class="fas fa-check"></i> Menor riesgo de bancarrota</li>
+                                    <li><i class="fas fa-check"></i> Crecimiento más lento pero estable</li>
+                                </ul>
+                                <button class="btn btn-outline">Usar esta estrategia</button>
+                            </div>
+                            
+                            <div class="strategy-card">
+                                <h3><i class="fas fa-layer-group"></i> Fixed Unit</h3>
+                                <p>Apuesta una cantidad fija por apuesta, independientemente del bankroll.</p>
+                                <ul>
+                                    <li><i class="fas fa-check"></i> Muy conservador</li>
+                                    <li><i class="fas fa-check"></i> Fácil de seguir</li>
+                                    <li><i class="fas fa-check"></i> No se adapta al tamaño del bankroll</li>
+                                </ul>
+                                <button class="btn btn-outline">Usar esta estrategia</button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>Configuración de Estrategia Actual: Percentage</h3>
+                            <div class="form-group">
+                                <label class="form-label">Porcentaje de Stake</label>
+                                <input type="range" min="1" max="10" value="3" class="form-control" id="stakePercentage">
+                                <output for="stakePercentage" id="stakePercentageValue">3%</output>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stake Mínimo</label>
+                                <input type="number" class="form-control" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stake Máximo</label>
+                                <input type="number" class="form-control" value="100">
+                            </div>
+                            <button class="btn btn-success">Guardar Configuración</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Calculadora -->
+                    <div class="tab-content" id="tab-calculator">
+                        <h3>Calculadora de Stake</h3>
+                        <p>Calcula el stake recomendado para tu próxima apuesta:</p>
+                        
+                        <div class="chart-grid">
+                            <div class="card">
+                                <div class="form-group">
+                                    <label class="form-label">Bankroll Actual</label>
+                                    <input type="number" class="form-control" id="bankrollInput" value="4582.50">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Cuota</label>
+                                    <input type="number" class="form-control" id="oddsInput" value="2.10" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Probabilidad Estimada (%)</label>
+                                    <input type="number" class="form-control" id="probabilityInput" value="55" step="1">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Estrategia</label>
+                                    <select class="form-select" id="strategySelect">
+                                        <option value="percentage">Percentage</option>
+                                        <option value="kelly">Kelly Criterion</option>
+                                        <option value="fixed">Fixed Unit</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" id="calculateBtn">Calcular Stake</button>
+                            </div>
+                            
+                            <div class="card">
+                                <h3>Resultado</h3>
+                                <div class="stat-value" id="stakeResult">€137.48</div>
+                                <div class="stat-label" id="stakePercentageResult">3.0% de tu bankroll</div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Stake Recomendado</label>
+                                    <input type="range" min="1" max="500" value="137" class="form-control" id="stakeSlider">
+                                    <output for="stakeSlider" id="stakeSliderValue">€137</output>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Ganancia Potencial</label>
+                                    <input type="text" class="form-control" id="potentialWin" value="€288.70" readonly>
+                                </div>
+                                
+                                <button class="btn btn-success">Aplicar a Nueva Apuesta</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Alertas de Bankroll -->
+                <div class="card">
+                    <h3 class="section-title"><i class="fas fa-bell"></i> Alertas de Bankroll</h3>
+                    <div class="form-group">
+                        <label class="form-label">Notificarme cuando mi bankroll disminuya un:</label>
+                        <input type="number" class="form-control" value="20" style="width: 100px; display: inline-block;"> %
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notificarme cuando mi bankroll aumente un:</label>
+                        <input type="number" class="form-control" value="25" style="width: 100px; display: inline-block;"> %
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Límite de pérdidas diarias:</label>
+                        <input type="number" class="form-control" value="200" style="width: 100px; display: inline-block;"> €
+                    </div>
+                    <button class="btn btn-primary">Guardar Alertas</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>BetMaster Pro</h3>
+                    <p>La aplicación definitiva para tipsters profesionales que quieren llevar su juego al siguiente nivel.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-telegram"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Recursos</h3>
+                    <ul>
+                        <li><a href="#">Blog de Apuestas</a></li>
+                        <li><a href="#">Guías para Tipsters</a></li>
+                        <li><a href="#">Calculadoras</a></li>
+                        <li><a href="#">Plantillas</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Herramientas</h3>
+                    <ul>
+                        <li><a href="#">Gestión de Bankroll</a></li>
+                        <li><a href="#">Seguimiento de Apuestas</a></li>
+                        <li><a href="#">Análisis de Rendimiento</a></li>
+                        <li><a href="#">Comparativas</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Soporte</h3>
+                    <ul>
+                        <li><a href="#">Centro de Ayuda</a></li>
+                        <li><a href="#">Contacto</a></li>
+                        <li><a href="#">Política de Privacidad</a></li>
+                        <li><a href="#">Términos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 BetMaster Pro. Todos los derechos reservados. Juega con responsabilidad.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gráfico de bankroll
+            const bankrollCtx = document.getElementById('bankrollChart').getContext('2d');
+            const bankrollChart = new Chart(bankrollCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                    datasets: [{
+                        label: 'Bankroll',
+                        data: [3000, 3200, 3350, 3600, 3800, 4100, 4350, 4500, 4420, 4600, 4750, 4582],
+                        borderColor: '#6C63FF',
+                        backgroundColor: 'rgba(108, 99, 255, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Bankroll (€)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Gráfico de distribución de stake
+            const stakeCtx = document.getElementById('stakeDistributionChart').getContext('2d');
+            const stakeChart = new Chart(stakeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fútbol', 'Baloncesto', 'Tenis', 'Otros'],
+                    datasets: [{
+                        data: [65, 20, 10, 5],
+                        backgroundColor: [
+                            '#6C63FF',
+                            '#4CC9F0',
+                            '#F72585',
+                            '#8D99AE'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Funcionalidad de tabs
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all tabs
+                    tabLinks.forEach(tab => tab.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = this.getAttribute('href');
+                    document.querySelector(tabId).classList.add('active');
+                });
+            });
+
+            // Calculadora de stake
+            document.getElementById('calculateBtn').addEventListener('click', function() {
+                const bankroll = parseFloat(document.getElementById('bankrollInput').value);
+                const odds = parseFloat(document.getElementById('oddsInput').value);
+                const probability = parseFloat(document.getElementById('probabilityInput').value);
+                const strategy = document.getElementById('strategySelect').value;
+                
+                let stake;
+                if (strategy === 'percentage') {
+                    stake = bankroll * 0.03; // 3% del bankroll
+                } else if (strategy === 'kelly') {
+                    // Fórmula simplificada de Kelly Criterion
+                    const b = odds - 1;
+                    const q = 1 - (probability / 100);
+                    const p = probability / 100;
+                    stake = bankroll * ((b * p - q) / b) * 0.5; // Mitad de Kelly para ser más conservador
+                } else {
+                    stake = 50; // Fixed unit
+                }
+                
+                document.getElementById('stakeResult').textContent = '€' + stake.toFixed(2);
+                document.getElementById('stakePercentageResult').textContent = (stake / bankroll * 100).toFixed(1) + '% de tu bankroll';
+                document.getElementById('stakeSlider').value = stake;
+                document.getElementById('stakeSliderValue').textContent = '€' + stake.toFixed(2);
+                document.getElementById('potentialWin').value = '€' + (stake * odds).toFixed(2);
+            });
+
+            // Control deslizante de porcentaje de stake
+            document.getElementById('stakePercentage').addEventListener('input', function() {
+                document.getElementById('stakePercentageValue').textContent = this.value + '%';
+            });
+
+            // Control deslizante de stake
+            document.getElementById('stakeSlider').addEventListener('input', function() {
+                document.getElementById('stakeSliderValue').textContent = '€' + this.value;
+                const odds = parseFloat(document.getElementById('oddsInput').value);
+                document.getElementById('potentialWin').value = '€' + (this.value * odds).toFixed(2);
+            });
+        });
+    </script>
+</body>
+</html>
